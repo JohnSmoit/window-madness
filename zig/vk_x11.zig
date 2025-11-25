@@ -38,8 +38,10 @@ pub fn main() !void {
     // a Display in X is a set of "screens" for a single user
     const main_display = x11.XOpenDisplay(0);
 
+
     // Top level  window in a windowing heirarchy, which covers the entirety
     // of a screen.
+    
     const root_window  = x11.XDefaultRootWindow(main_display);
 
     
@@ -51,6 +53,7 @@ pub fn main() !void {
     // to Win32's nasty GDI.
     // Just for reference -- vulkan is the only nightmare API I need
     // const gc_context   = x11.XDefaultGC(main_display, screen);
+    
     var wp           = WindowParams{
         .x = 0,
         .y = 0,
@@ -70,6 +73,7 @@ pub fn main() !void {
         }
     };
 
+    
     const window       = x11.XCreateWindow(
         main_display,
         root_window,
@@ -84,21 +88,25 @@ pub fn main() !void {
         wp.attr_val_mask,
         &wp.win_attrs,
     );
+    
 
     // map the window into the display heirarchy, with heirarchal position as specified
     // in XCreatWindow.
     _ = x11.XMapWindow(main_display, window);
 
     _ = x11.XStoreName(main_display, window, "Vulkan from X11 surface");
+    
 
     // this is how the window server X communicates between clients, which includes window managers.
     // In this case, we retrieve the atom for the server's window destructor signal.
     // This way, our window will recieve and understand delete signals sent from other clients.
     // Apparently, this isn't strictly required, guh.
-    const wm_delete_window = x11.XInternAtom(main_display, "WM_DELETE_WINDOW", x11.False);
-    if (x11.XSetWMProtocols(main_display, window, wm_delete_window, 1) == 0) {
+    var wm_delete_window = x11.XInternAtom(main_display, "WM_DELETE_WINDOW", x11.False);
+    
+    if (x11.XSetWMProtocols(main_display, window, &wm_delete_window, 1) == 0) {
         std.debug.print("Error: Failed to register window manager's delete property!\n", .{});
     }
+    
 
     while (true) {
         var event: x11.XEvent = undefined;

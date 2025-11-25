@@ -16,7 +16,10 @@ pub fn build(b: *std.Build) void {
         }),
     });
     
-    exe.root_module.linkSystemLibrary("X11", .{});
+    exe.root_module.linkSystemLibrary("X11", .{
+        .needed = true,
+    });
+    exe.root_module.link_libc = true;
 
     b.installArtifact(exe);
 
