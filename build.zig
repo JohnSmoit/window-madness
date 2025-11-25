@@ -6,6 +6,10 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const vk_mod = b.dependency("vulkan", .{
+        .registry = b.dependency("vulkan_headers", .{}).path("registry/vk.xml"), 
+    }).module("vulkan-zig");
+
     const exe = b.addExecutable(.{
         .name = "windowing_madness",
         .root_module = b.createModule(.{
@@ -16,9 +20,9 @@ pub fn build(b: *std.Build) void {
         }),
     });
     
-    exe.root_module.linkSystemLibrary("X11", .{
-        .needed = true,
-    });
+    exe.root_module.linkSystemLibrary("X11", .{});
+    exe.root_module.addImport("vulkan", vk_mod);
+
     exe.root_module.link_libc = true;
 
     b.installArtifact(exe);
