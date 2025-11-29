@@ -127,11 +127,12 @@ fn debugCallback(
     return .true;
 }
 
-fn initVulkanSurface() !void {
+fn initVulkanSurface(display: ?*x11.Display, window: x11.Window) !void {
     base_wrapper = vk.BaseWrapper.load(BasicVulkanLoader.load);
     
     const extensions: []const [*:0]const u8 = &.{
         vk.extensions.khr_surface.name.ptr,
+        vk.extensions.khr_xlib_surface.name.ptr,
         vk.extensions.ext_debug_utils.name.ptr,
     };
 
@@ -169,6 +170,12 @@ fn initVulkanSurface() !void {
 
     inst_wrapper = vk.InstanceWrapper.load(vk_instance,BasicVulkanLoader.load);
     inst_proxy = vk.InstanceProxy.init(vk_instance, &inst_wrapper);
+
+    surf = try inst_proxy.createXlibSurfaceKHR(&vk.XlibSurfaceCreateInfoKHR{
+        .dpy = @ptrCast(display), 
+        .window = window,
+    }, null);
+    defer inst_proxy.destroySurfaceKHR(surf, null);
 
     std.debug.print("If you're seeing this vulkan sort of worked at least a little bit!\n", .{});
 }
@@ -241,7 +248,7 @@ pub fn main() !void {
         std.debug.print("Error: Failed to register window manager's delete property!\n", .{});
     }
 
-    try initVulkanSurface();
+    try initVulkanSurface(main_display, window);
     defer BasicVulkanLoader.cleanup();
 
     while (true) {
